@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogos: Adivinhação e Forca</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ffeb3b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #3f51b5;
+            margin: 20px 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+        }
+        h2 {
+            font-size: 2rem;
+        }
+        select, input {
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            font-size: 18px;
+            border: 2px solid #3f51b5;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #3f51b5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button:hover {
+            background-color: #1e88e5;
+        }
+        .message, .score {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+            text-align: center;
+        }
+        #hangmanCanvas {
+            border: 2px solid #3f51b5;
+            margin-top: 20px;
+            width: 300px;
+            height: 300px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #donationSection {
+            margin-top: 30px;
+            text-align: center;
+        }
+        #donateButton {
+            background-color: #d32f2f;
+            margin-top: 10px;
+            border: none;
+            font-size: 18px;
+        }
+        #donationMessage {
+            display: none;
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #333;
+        }
+        #colorOptions {
+            display: flex;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .colorOption {
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+            cursor: pointer;
+            border: 2px solid #3f51b5;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContent">
+        <h1>Jogo de Adivinhação</h1>
+        <h2>Escolha o nível de dificuldade:</h2>
+        <select id="difficultySelect">
+            <option value="easy">Fácil</option>
+            <option value="medium">Médio</option>
+            <option value="hard">Difícil</option>
+        </select>
+        <p>Adivinhe um número:</p>
+        <input type="number" id="guess" min="1" placeholder="Digite seu palpite">
+        <div>
+            <button id="submit">Adivinhar</button>
+            <button id="restart" style="display: none;">Reiniciar</button>
+            <button id="otherGames">Jogar Outros Jogos</button>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="score" id="score">Tentativas: 0</div>
+        <div id="numberRange" class="message"></div>
+    </div>
+
+    <div id="hangmanGame" style="display: none;">
+        <h1>Jogo da Forca</h1>
+        <h2>Escolha o nível de dificuldade:</h2>
+        <select id="hangmanDifficultySelect">
+            <option value="easy">Fácil</option>
+            <option value="medium">Médio</option>
+            <option value="hard">Difícil</option>
+        </select>
+        <p>Advinhe a palavra: <span id="hint" style="color: #3f51b5;"></span></p>
+        <div id="hangmanWord" style="font-size: 2rem;"></div>
+        <input type="text" id="hangmanInput" maxlength="1" placeholder="Digite uma letra">
+        <div>
+            <button id="hangmanSubmit">Adivinhar Letra</button>
+            <button id="hangmanRestart" style="display: none;">Reiniciar Jogo da Forca</button>
+            <button id="returnToGuessingGame">Voltar ao Jogo de Adivinhação</button>
+        </div>
+        <div class="message" id="hangmanMessage"></div>
+        <canvas id="hangmanCanvas"></canvas>
+        <div class="score" id="hangmanScore">Pontuação: 0</div>
+        <div class="usedLetters" id="usedLetters"></div>
+        
+        <div id="store" style="display: none;">
+            <h2>Loja</h2>
+            <div>
+                <button id="buyHint">Comprar Dica (10 pontos)</button>
+            </div>
+            <div>
+                <h3>Mudar Cor de Fundo:</h3>
+                <div id="colorOptions">
+                    <div class="colorOption" style="background-color: #ffeb3b;" onclick="changeBackgroundColor('#ffeb3b')"></div>
+                    <div class="colorOption" style="background-color: #90caf9;" onclick="changeBackgroundColor('#90caf9')"></div>
+                    <div class="colorOption" style="background-color: #f48fb1;" onclick="changeBackgroundColor('#f48fb1')"></div>
+                    <div class="colorOption" style="background-color: #c5e1a5;" onclick="changeBackgroundColor('#c5e1a5')"></div>
+                    <div class="colorOption" style="background-color: #ffe57f;" onclick="changeBackgroundColor('#ffe57f')"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="donationSection">
+        <h2>Gostou do jogo?</h2>
+        <p>Considere fazer uma doação!</p>
+        <button id="donateButton">Doe Agora!</button>
+        <div id="donationMessage">Chave PIX: brunosouza33178@gmail.com</div>
+    </div>
+
+    <script>
+        let score = 0;
+        let attempts = 0;
+        let maxNumber = 100; 
+        let randomNumber;
+
+        const guessingGameScores = {
+            easy: 10,
+            medium: 20,
+            hard: 30
+        };
+
+        function startGuessingGame() {
+            const difficulty = document.getElementById('difficultySelect').value;
+            maxNumber = difficulty === 'easy' ? 50 : (difficulty === 'medium' ? 100 : 200);
+            randomNumber = Math.floor(Math.random() * maxNumber) + 1;
+            attempts = 0;
+            document.getElementById('score').textContent = `Tentativas: ${attempts}`;
+            document.getElementById('message').textContent = '';
+            document.getElementById('numberRange').textContent = `Os números estão entre 1 e ${maxNumber}.`;
+        }
+
+        function resetGame() {
+            startGuessingGame();
+        }
+
+        document.getElementById('difficultySelect').addEventListener('change', resetGame);
+
+        document.getElementById('submit').addEventListener('click', function () {
+            const guess = Number(document.getElementById('guess').value);
+            attempts++;
+
+            if (isNaN(guess) || guess < 1 || guess > maxNumber) {
+                document.getElementById('message').textContent = `Por favor, insira um número válido entre 1 e ${maxNumber}.`;
+                return;
+            }
+
+            if (guess === randomNumber) {
+                const difficulty = document.getElementById('difficultySelect').value;
+                score += guessingGameScores[difficulty];
+                document.getElementById('message').textContent = `🎉 Parabéns! Você adivinhou o número ${randomNumber} em ${attempts} tentativas.`;
+                document.getElementById('restart').style.display = 'block';
+            } else {
+                document.getElementById('message').textContent = `Tente um número ${guess < randomNumber ? 'maior' : 'menor'}.`;
+            }
+
+            document.getElementById('score').textContent = `Tentativas: ${attempts}`;
+            document.getElementById('guess').value = '';
+        });
+
+        document.getElementById('restart').addEventListener('click', function () {
+            resetGame();
+            document.getElementById('restart').style.display = 'none';
+        });
+
+        document.getElementById('otherGames').addEventListener('click', function () {
+            startHangmanGame();
+        });
+
+        const words = [
+            { word: "maçã", hint: "Uma fruta vermelha." },
+            { word: "pato", hint: "Um animal aquático." },
+            { word: "gato", hint: "Animal de estimação." },
+            { word: "sol", hint: "Estrela que ilumina o dia." },
+            { word: "carro", hint: "Veículo de transporte." },
+            { word: "computador", hint: "Máquina que usamos." },
+            { word: "livro", hint: "Fonte de conhecimento." },
+            { word: "cachorro", hint: "Melhor amigo do homem." },
+            { word: "coração", hint: "Órgão vital." },
+            { word: "açúcar", hint: "Usado para adoçar alimentos." },
+            { word: "pássaro", hint: "Animal que voa." }
+        ];
+
+        let currentWord, guessedLetters, wrongGuesses, hangmanScore = 0;
+
+        const hangmanGameScores = {
+            easy: 50,
+            medium: 70,
+            hard: 100
+        };
+
+        function startHangmanGame() {
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('hangmanGame').style.display = 'block';
+            document.getElementById('store').style.display = 'block'; 
+            startHangmanGameWithDifficulty();
+        }
+
+        function startHangmanGameWithDifficulty() {
+            const difficulty = document.getElementById('hangmanDifficultySelect').value;
+            let wordList;
+
+            if (difficulty === 'easy') {
+                wordList = words.filter((_, index) => index < 4); 
+            } else {
+                wordList = words; 
+            }
+
+            const randomIndex = Math.floor(Math.random() * wordList.length);
+            currentWord = wordList[randomIndex].word;
+            const hint = wordList[randomIndex].hint;
+            guessedLetters = [];
+            wrongGuesses = 0;
+            document.getElementById('hint').textContent = `Dica: ${hint}`;
+            document.getElementById('hangmanMessage').textContent = '';
+            document.getElementById('hangmanInput').value = '';
+            document.getElementById('usedLetters').textContent = '';
+            document.getElementById('hangmanScore').textContent = `Pontuação: ${hangmanScore}`;
+            updateHangmanWord();
+            drawHangman();
+        }
+
+        document.getElementById('hangmanDifficultySelect').addEventListener('change', function () {
+            startHangmanGameWithDifficulty();
+        });
+
+        function updateHangmanWord() {
+            const displayWord = currentWord.split('').map(letter => (guessedLetters.includes(letter) ? letter : '_')).join(' ');
+            document.getElementById('hangmanWord').textContent = displayWord;
+            drawHangman();
+        }
+
+        function checkHangmanGame() {
+            if (wrongGuesses >= 6) {
+                document.getElementById('hangmanMessage').textContent = `Você perdeu! A palavra era: ${currentWord}.`;
+                document.getElementById('hangmanRestart').style.display = 'block';
+            } else if (currentWord.split('').every(letter => guessedLetters.includes(letter))) {
+                const difficulty = document.getElementById('hangmanDifficultySelect').value;
+                hangmanScore += hangmanGameScores[difficulty];
+                document.getElementById('hangmanMessage').textContent = 'Parabéns! Você adivinhou a palavra!';
+                document.getElementById('hangmanScore').textContent = `Pontuação: ${hangmanScore}`;
+                document.getElementById('hangmanRestart').style.display = 'block';
+            }
+        }
+
+        document.getElementById('hangmanSubmit').addEventListener('click', function () {
+            const letter = document.getElementById('hangmanInput').value.toLowerCase();
+            if (letter && !guessedLetters.includes(letter) && /^[a-zA-Zçã]+$/.test(letter)) {
+                guessedLetters.push(letter);
+                if (!currentWord.includes(letter)) {
+                    wrongGuesses++;
+                }
+                document.getElementById('hangmanInput').value = '';
+                document.getElementById('usedLetters').textContent = `Letras usadas: ${guessedLetters.join(', ')}`;
+                updateHangmanWord();
+                checkHangmanGame();
+            }
+        });
+
+        document.getElementById('hangmanRestart').addEventListener('click', function () {
+            startHangmanGameWithDifficulty();
+        });
+
+        document.getElementById('returnToGuessingGame').addEventListener('click', function () {
+            document.getElementById('hangmanGame').style.display = 'none';
+            document.getElementById('gameContent').style.display = 'block';
+            resetGame();
+        });
+
+        function drawHangman() {
+            const canvas = document.getElementById('hangmanCanvas');
+            const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.beginPath();
+            context.moveTo(30, 280); 
+            context.lineTo(270, 280);
+            context.moveTo(80, 280);
+            context.lineTo(80, 20);
+            context.lineTo(150, 20);
+            context.lineTo(150, 40);
+
+            if (wrongGuesses > 0) {
+                context.arc(150, 60, 10, 0, Math.PI * 2, true);
+            }
+            if (wrongGuesses > 1) {
+                context.moveTo(150, 70).lineTo(150, 130);
+            }
+            if (wrongGuesses > 2) {
+                context.moveTo(150, 90).lineTo(130, 110);
+            }
+            if (wrongGuesses > 3) {
+                context.moveTo(150, 90).lineTo(170, 110);
+            }
+            if (wrongGuesses > 4) {
+                context.moveTo(150, 130).lineTo(130, 170);
+            }
+            if (wrongGuesses > 5) {
+                context.moveTo(150, 130).lineTo(170, 170);
+            }
+            context.stroke();
+        }
+
+        document.getElementById('buyHint').addEventListener('click', function () {
+            if (hangmanScore >= 10) {
+                hangmanScore -= 10;
+                document.getElementById('hangmanScore').textContent = `Pontuação: ${hangmanScore}`;
+                let hintLetter;
+                do {
+                    hintLetter = currentWord.charAt(Math.floor(Math.random() * currentWord.length));
+                } while (guessedLetters.includes(hintLetter));
+                guessedLetters.push(hintLetter);
+                alert("Dica: Uma letra da palavra é " + hintLetter);
+                updateHangmanWord();
+            } else {
+                alert("Você não tem pontos suficientes para comprar uma dica.");
+            }
+        });
+
+        function changeBackgroundColor(color) {
+            document.body.style.backgroundColor = color;
+        }
+
+        document.getElementById('donateButton').addEventListener('click', function () {
+            document.getElementById('donationMessage').style.display = 'block';
+        });
+
+        // Inicia o jogo de adivinhação
+        startGuessingGame();
+    </script>
+</body>
+</html>
